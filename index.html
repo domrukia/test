@@ -155,7 +155,7 @@
             const aspect = await getVideoRatio(id);
 
             const iframe = document.createElement("iframe");
-            iframe.src = `https://www.redgifs.com/ifr/${id}`;
+            iframe.src = `https://www.redgifs.com/ifr/${id}?quality=hd`;
             iframe.allowFullscreen = true;
 
             iframe.setAttribute("allow", "autoplay; fullscreen");
