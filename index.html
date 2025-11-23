@@ -124,8 +124,7 @@
 
       async function loadJSON() {
         const gistID = document.getElementById("gistid").value.trim();
-        let filename = document.getElementById("filename").value.trim();
-        filename = filename.endsWith(".json") ? filename : filename + ".json";
+        const filename = "cpls.json"
         const username = "domrukia";
 
         const errorBox = document.getElementById("errorBox");
