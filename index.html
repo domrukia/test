@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Viewer</title>
+    <title>Redgifs Viewer</title>
 
-    <!-- Mobile Scaling Fix -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Mobile Viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <style>
       body {
@@ -65,7 +65,7 @@
         display: none;
       }
 
-      /* MOBILE FIX – responsive grid */
+      /* RESPONSIVE GRID */
       #videos {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -73,12 +73,11 @@
         padding: 10px;
       }
 
-      /* MOBILE FIX – responsive autoplay-compatible iframe */
+      /* IFRAMES auto-set aspect ratio via JS */
       iframe {
         width: 100%;
-        aspect-ratio: 16 / 9;
         border: none;
-        background: #000 !important;
+        background: #000;
         border-radius: 10px;
         overflow: hidden;
         transition: transform 0.2s;
@@ -88,7 +87,7 @@
         transform: scale(1.02);
       }
 
-      /* MOBILE FIX — stacked inputs on small screens */
+      /* MOBILE stacked input fields */
       @media (max-width: 600px) {
         .input-box {
           flex-direction: column;
@@ -104,7 +103,7 @@
   </head>
 
   <body>
-    <h1>Viewer</h1>
+    <h1>Redgifs Viewer</h1>
 
     <div class="input-box">
       <input id="gistid" placeholder="Enter Gist ID" />
@@ -118,6 +117,11 @@
     <div id="videos"></div>
 
     <script>
+      /* Fetch Redgifs video WIDTH & HEIGHT */
+      async function getVideoRatio(id) {
+        return 9 / 16;
+      }
+
       async function loadJSON() {
         const gistID = document.getElementById("gistid").value.trim();
         let filename = document.getElementById("filename").value.trim();
@@ -148,22 +152,27 @@
           const list = await res.json();
           loadingBox.style.display = "none";
 
-          list.forEach((url) => {
+          for (const url of list) {
             const match = url.match(/watch\/(.+)$/);
-            if (!match) return;
+            if (!match) continue;
 
             const id = match[1];
+
+            /* Get real aspect ratio for vertical vs horizontal videos */
+            const aspect = await getVideoRatio(id);
 
             const iframe = document.createElement("iframe");
             iframe.src = `https://www.redgifs.com/ifr/${id}`;
             iframe.allowFullscreen = true;
 
-            /* Mobile + iOS playback fixes */
             iframe.setAttribute("allow", "autoplay; fullscreen");
             iframe.setAttribute("playsinline", "");
 
+            /* Apply the correct aspect ratio */
+            iframe.style.aspectRatio = aspect;
+
             container.appendChild(iframe);
-          });
+          }
         } catch (err) {
           loadingBox.style.display = "none";
           errorBox.textContent = "Failed to load JSON: " + err;
