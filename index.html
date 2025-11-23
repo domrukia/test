@@ -3,7 +3,6 @@
   <head>
     <title>Viewer</title>
 
-    <!-- Mobile Viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <style>
@@ -25,9 +24,11 @@
         justify-content: center;
         gap: 10px;
         margin-bottom: 20px;
+        flex-wrap: wrap;
       }
 
-      input {
+      input,
+      select {
         padding: 10px;
         border-radius: 6px;
         border: none;
@@ -65,7 +66,6 @@
         display: none;
       }
 
-      /* RESPONSIVE GRID */
       #videos {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -85,18 +85,6 @@
       iframe:hover {
         transform: scale(1.02);
       }
-
-      @media (max-width: 600px) {
-        .input-box {
-          flex-direction: column;
-          width: 100%;
-        }
-
-        .input-box input,
-        .input-box button {
-          width: 100%;
-        }
-      }
     </style>
   </head>
 
@@ -104,8 +92,16 @@
     <h1>Viewer</h1>
 
     <div class="input-box">
-      <input id="gistid" placeholder="Enter Gist ID" />
-      <button onclick="loadJSON()">Load</button>
+      <input id="gistid" placeholder="Enter ID" />
+      <button onclick="loadTypes()">Load Types</button>
+
+      <select id="typeSelect" disabled>
+        <option value="">Select Type</option>
+      </select>
+
+      <button onclick="loadVideos()" disabled id="loadVideosBtn">
+        Load Videos
+      </button>
     </div>
 
     <div class="error" id="errorBox"></div>
@@ -114,60 +110,90 @@
     <div id="videos"></div>
 
     <script>
+      const username = "domrukia";
+      const filename = "clps.json";
+      let loadedJSON = null;
+
       async function getVideoRatio(id) {
         return 9 / 16;
       }
 
-      async function loadJSON() {
+      async function loadTypes() {
         const gistID = document.getElementById("gistid").value.trim();
-        const filename = "clps.json"; // <<<< HARD-CODED
-        const username = "domrukia";
-
+        const typeSelect = document.getElementById("typeSelect");
+        const loadBtn = document.getElementById("loadVideosBtn");
         const errorBox = document.getElementById("errorBox");
         const loadingBox = document.getElementById("loadingBox");
-        const container = document.getElementById("videos");
 
         errorBox.style.display = "none";
-        container.innerHTML = "";
+        typeSelect.innerHTML = `<option value="">Select Type</option>`;
+        typeSelect.disabled = true;
+        loadBtn.disabled = true;
 
         if (!gistID) {
-          errorBox.textContent = "Please enter a Gist ID.";
+          errorBox.textContent = "Please enter a ID.";
           errorBox.style.display = "block";
           return;
         }
 
         const raw = `https://gist.githubusercontent.com/${username}/${gistID}/raw/${filename}`;
-
         loadingBox.style.display = "block";
 
         try {
           const res = await fetch(raw);
           if (!res.ok) throw new Error("HTTP " + res.status);
 
-          const list = await res.json();
+          loadedJSON = await res.json();
           loadingBox.style.display = "none";
 
-          for (const url of list) {
-            const match = url.match(/watch\/(.+)$/);
-            if (!match) continue;
-
-            const id = match[1];
-            const aspect = await getVideoRatio(id);
-
-            const iframe = document.createElement("iframe");
-            iframe.src = `https://www.redgifs.com/ifr/${id}?quality=hd`;
-            iframe.allowFullscreen = true;
-
-            iframe.setAttribute("allow", "autoplay; fullscreen");
-            iframe.setAttribute("playsinline", "");
-            iframe.style.aspectRatio = aspect;
-
-            container.appendChild(iframe);
+          for (const key of Object.keys(loadedJSON)) {
+            const opt = document.createElement("option");
+            opt.value = key;
+            opt.textContent = key;
+            typeSelect.appendChild(opt);
           }
+
+          typeSelect.disabled = false;
+          loadBtn.disabled = false;
         } catch (err) {
           loadingBox.style.display = "none";
           errorBox.textContent = "Failed to load JSON: " + err;
           errorBox.style.display = "block";
+        }
+      }
+
+      async function loadVideos() {
+        const type = document.getElementById("typeSelect").value;
+        const errorBox = document.getElementById("errorBox");
+        const container = document.getElementById("videos");
+
+        errorBox.style.display = "none";
+        container.innerHTML = "";
+
+        if (!type || !loadedJSON[type]) {
+          errorBox.textContent = "Invalid type selected.";
+          errorBox.style.display = "block";
+          return;
+        }
+
+        const list = loadedJSON[type];
+
+        for (const url of list) {
+          const match = url.match(/watch\/(.+)$/);
+          if (!match) continue;
+
+          const id = match[1];
+          const aspect = await getVideoRatio(id);
+
+          const iframe = document.createElement("iframe");
+          iframe.src = `https://www.redgifs.com/ifr/${id}?quality=hd`;
+          iframe.allowFullscreen = true;
+
+          iframe.setAttribute("allow", "autoplay; fullscreen");
+          iframe.setAttribute("playsinline", "");
+          iframe.style.aspectRatio = aspect;
+
+          container.appendChild(iframe);
         }
       }
     </script>
