@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Redgifs Viewer</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #0d0d0d;
+        color: #fff;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+      }
+
+      .input-box {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      input {
+        padding: 10px;
+        border-radius: 6px;
+        border: none;
+        width: 260px;
+        background: #222;
+        color: #fff;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        background: #008cff;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      button:hover {
+        background: #0a72c6;
+      }
+
+      .error {
+        text-align: center;
+        color: #ff4d4d;
+        margin-bottom: 15px;
+        font-size: 15px;
+        display: none;
+      }
+
+      .loading {
+        text-align: center;
+        margin-top: 10px;
+        font-size: 16px;
+        display: none;
+      }
+
+      #videos {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 20px;
+        padding: 20px;
+      }
+
+      iframe {
+        width: 100%;
+        height: 360px;
+        border: none;
+        background: #000 !important; /* force black background */
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      iframe:hover {
+        transform: scale(1.02);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Redgifs Viewer</h1>
+
+    <div class="input-box">
+      <input id="gistid" placeholder="Enter Gist ID" />
+      <input id="filename" placeholder="Enter filename" />
+      <button onclick="loadJSON()">Load</button>
+    </div>
+
+    <div class="error" id="errorBox"></div>
+    <div class="loading" id="loadingBox">Loading… please wait</div>
+
+    <div id="videos"></div>
+
+    <script>
+      async function loadJSON() {
+        const gistID = document.getElementById("gistid").value.trim();
+        let filename = document.getElementById("filename").value.trim();
+        filename = filename.endsWith(".json") ? filename : filename + ".json";
+        const username = "domrukia";
+
+        const errorBox = document.getElementById("errorBox");
+        const loadingBox = document.getElementById("loadingBox");
+        const container = document.getElementById("videos");
+
+        errorBox.style.display = "none";
+        container.innerHTML = "";
+
+        if (!gistID || !filename) {
+          errorBox.textContent = "Please enter both Gist ID and filename.";
+          errorBox.style.display = "block";
+          return;
+        }
+
+        const raw = `https://gist.githubusercontent.com/${username}/${gistID}/raw/${filename}`;
+
+        loadingBox.style.display = "block";
+
+        try {
+          const res = await fetch(raw);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+
+          const list = await res.json();
+          loadingBox.style.display = "none";
+
+          list.forEach((url) => {
+            const match = url.match(/watch\/(.+)$/);
+            if (!match) return;
+
+            const id = match[1];
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://www.redgifs.com/ifr/${id}`;
+            iframe.allowFullscreen = true;
+
+            container.appendChild(iframe);
+          });
+        } catch (err) {
+          loadingBox.style.display = "none";
+          errorBox.textContent = "Failed to load JSON: " + err;
+          errorBox.style.display = "block";
+        }
+      }
+    </script>
+  </body>
+</html>
