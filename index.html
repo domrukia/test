@@ -73,7 +73,6 @@
         padding: 10px;
       }
 
-      /* IFRAMES auto-set aspect ratio via JS */
       iframe {
         width: 100%;
         border: none;
@@ -87,7 +86,6 @@
         transform: scale(1.02);
       }
 
-      /* MOBILE stacked input fields */
       @media (max-width: 600px) {
         .input-box {
           flex-direction: column;
@@ -116,14 +114,13 @@
     <div id="videos"></div>
 
     <script>
-      /* Fetch Redgifs video WIDTH & HEIGHT */
       async function getVideoRatio(id) {
         return 9 / 16;
       }
 
       async function loadJSON() {
         const gistID = document.getElementById("gistid").value.trim();
-        const filename = "cpls.json"
+        const filename = "clps.json"; // <<<< HARD-CODED
         const username = "domrukia";
 
         const errorBox = document.getElementById("errorBox");
@@ -134,7 +131,7 @@
         container.innerHTML = "";
 
         if (!gistID) {
-          errorBox.textContent = "Please enter ID";
+          errorBox.textContent = "Please enter a Gist ID.";
           errorBox.style.display = "block";
           return;
         }
@@ -155,8 +152,6 @@
             if (!match) continue;
 
             const id = match[1];
-
-            /* Get real aspect ratio for vertical vs horizontal videos */
             const aspect = await getVideoRatio(id);
 
             const iframe = document.createElement("iframe");
@@ -165,8 +160,6 @@
 
             iframe.setAttribute("allow", "autoplay; fullscreen");
             iframe.setAttribute("playsinline", "");
-
-            /* Apply the correct aspect ratio */
             iframe.style.aspectRatio = aspect;
 
             container.appendChild(iframe);
